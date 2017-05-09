@@ -7,4 +7,13 @@ public class ServerMessage extends AbstractMessage {
 
     private static final long serialVersionUID = 1152145742513181622L;
 
+    public ServerMessage() {
+        super();
+    }
+
+    public ServerMessage(String initialContent) {
+        super(initialContent);
+    }
+
+
 }

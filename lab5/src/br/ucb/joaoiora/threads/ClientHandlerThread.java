@@ -1,15 +1,12 @@
 package br.ucb.joaoiora.threads;
 
+import br.ucb.joaoiora.model.ClientMessage;
+import br.ucb.joaoiora.model.Message;
+import br.ucb.joaoiora.model.ServerMessage;
 import br.ucb.joaoiora.utils.StringUtils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by joaocarlos on 08/05/17.
@@ -17,8 +14,10 @@ import java.util.List;
 public class ClientHandlerThread implements Runnable {
 
     private Socket socket;
-    private PrintWriter serverOutput;
-    private BufferedReader serverInput;
+
+    private String directory;
+
+    private String requestedFile;
 
     public ClientHandlerThread(Socket socket) {
         this.socket = socket;
@@ -26,53 +25,46 @@ public class ClientHandlerThread implements Runnable {
 
     @Override
     public void run() {
-        this.serverOutput = new PrintWriter(socket.getOutputStream()); // change to ObjectOutputStream
-        this.serverInput = new BufferedReader(new InputStreamReader(socket.getInputStream())); // Change to ObjectInputStream
-        String fromClient = "";
-        serverOutput.println("[SERVER] Please enter a directory: ");
-        fromClient = serverInput.readLine();
-        List<String> files = getFilesInDirectory(fromClient);
-        if (files == null) {
-            serverOutput.println("[SERVER] Invalid Directory");
-        } else {
-            for (String filename : files) {
-                serverOutput.println(filename);
-            }
-            serverOutput.println("[SERVER] Please enter the name of file you want transferred: ");
+        System.out.println("[DEBUG] Started ClientHandlerThread for socket " + socket.getInetAddress());
+        try (ObjectOutputStream serverOut = new ObjectOutputStream(socket.getOutputStream());
+             ObjectInputStream serverIn = new ObjectInputStream(socket.getInputStream())) {
+            dealWithClientInput(serverOut, serverIn);
+
+
+        } catch (IOException | ClassNotFoundException ex) {
+
         }
-        fromClient = serverInput.readLine();
-        // TODO check if response from client is an actual file
-        // TODO from here, create DatagramSocket to transfer file
+        System.out.println("[DEBUG] Finished running ClientHandlerThread for socket " + socket.getInetAddress());
     }
 
-    private String proccessClientInput() {
-        String string = serverInput.readLine();
-        if (StringUtils.isEmpty(string)) {
-
-        }
-        if (string.equals("quit")) {
-            socket.close();
-        }
-        return string;
+    private void dealWithClientInput(ObjectOutputStream serverOut, ObjectInputStream serverIn) throws IOException, ClassNotFoundException {
+        serverOut.writeObject(new ServerMessage("Please enter a directory: "));
+        Message message = (ClientMessage) serverIn.readObject();
+        serverOut.writeObject(createRespondeFromInput(message.getContent()));
     }
 
-    private static List<String> getFilesInDirectory(final String rootPath) {
-        File file = new File(rootPath);
-        if (file.exists()) {
-            if (file.isDirectory()) {
-                return getFilenames(file);
-            }
+    private static Message createRespondeFromInput(final String messageContent) {
+        if (StringUtils.isEmpty(messageContent)) {
+            return new ServerMessage("You did not provide a directory.");
         }
-        return null;
+        File file = new File(messageContent);
+        if (file.isFile()) {
+            // deal later with this...
+            return null;
+        }
+        if (file.isDirectory()) {
+            return getListOfFiles(file.listFiles());
+        }
+        return new ServerMessage("There was a problem when parsing your input.");
     }
 
-    private static List<String> getFilenames(File rootPath) {
-        List<String> filenames = new ArrayList<>();
-        File[] files = rootPath.listFiles();
+    private static Message getListOfFiles(final File[] files) {
+        Message message = new ServerMessage();
         for (File file : files) {
-            filenames.add(file.getName());
+            message.append(file.getName());
         }
-        return filenames;
+        return message;
     }
+
 
 }

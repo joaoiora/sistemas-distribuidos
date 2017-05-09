@@ -11,7 +11,7 @@ public interface Message extends Serializable {
      *
      * @param message
      */
-    public abstract void appendMessage(final String message);
+    public abstract void append(final String message);
 
     /**
      *

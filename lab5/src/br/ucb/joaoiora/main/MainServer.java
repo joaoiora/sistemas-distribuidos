@@ -1,6 +1,6 @@
 package br.ucb.joaoiora.main;
 
-import br.ucb.joaoiora.server.Server;
+import br.ucb.joaoiora.server.TCPServer;
 
 /**
  * Created by joaocarlos on 08/05/17.
@@ -8,8 +8,7 @@ import br.ucb.joaoiora.server.Server;
 public class MainServer {
 
     public static void main(String[] args) {
-
-        Server server = new Server();
+        TCPServer server = new TCPServer();
         server.run();
     }
 

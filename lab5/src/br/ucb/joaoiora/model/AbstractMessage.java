@@ -24,16 +24,18 @@ public abstract class AbstractMessage implements Message {
         this.content = new StringBuilder();
     }
 
+    public AbstractMessage(String initialContent) {
+        this();
+        append(initialContent);
+    }
+
     /**
      *
      * @param message
      */
     @Override
-    public void appendMessage(String message) {
+    public void append(String message) {
         content.append(message);
-        if (!message.contains(NEW_LINE)) {
-            content.append(NEW_LINE);
-        }
     }
 
     /**

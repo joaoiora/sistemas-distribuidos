@@ -5,11 +5,11 @@ package br.ucb.joaoiora.utils;
  */
 public class StringUtils {
 
-    public static boolean isEmpty(final String string) {
+    public static boolean isEmpty(final CharSequence string) {
         return string == null || string.length() == 0;
     }
 
-    public static boolean isNotEmpty(final String string) {
+    public static boolean isNotEmpty(final CharSequence string) {
         return !isEmpty(string);
     }
 

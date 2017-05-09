@@ -26,8 +26,8 @@ public class ClientHandlerThread implements Runnable {
 
     @Override
     public void run() {
-        this.serverOutput = new PrintWriter(socket.getOutputStream());
-        this.serverInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        this.serverOutput = new PrintWriter(socket.getOutputStream()); // change to ObjectOutputStream
+        this.serverInput = new BufferedReader(new InputStreamReader(socket.getInputStream())); // Change to ObjectInputStream
         String fromClient = "";
         serverOutput.println("[SERVER] Please enter a directory: ");
         fromClient = serverInput.readLine();

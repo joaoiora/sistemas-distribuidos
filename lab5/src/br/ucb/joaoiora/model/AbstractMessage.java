@@ -10,7 +10,7 @@ public abstract class AbstractMessage implements Message {
     /**
      *
      */
-    protected static final String NEW_LINE = System.getProperty("line.separator");
+    protected static final String NEW_LINE = System.lineSeparator();
 
     /**
      *
@@ -36,6 +36,9 @@ public abstract class AbstractMessage implements Message {
     @Override
     public void append(String message) {
         content.append(message);
+        if (!message.endsWith(NEW_LINE)) {
+            content.append(NEW_LINE);
+        }
     }
 
     /**

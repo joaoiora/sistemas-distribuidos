@@ -89,7 +89,7 @@ public class TCPServer {
             for (Path path : stream) {
                 if (!Files.isDirectory(path)) {
                     message.append(path.toString());
-                    message.append(System.lineSeparator());
+//                    message.append(System.lineSeparator());
                 }
             }
             message.append("Please enter the name of the desired file: ");

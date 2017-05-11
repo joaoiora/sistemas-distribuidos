@@ -3,7 +3,6 @@ package br.ucb.joaoiora.client;
 import br.ucb.joaoiora.model.ClientMessage;
 import br.ucb.joaoiora.model.Message;
 import br.ucb.joaoiora.model.ServerMessage;
-import br.ucb.joaoiora.utils.ConsoleUtils;
 
 import java.io.*;
 import java.net.Socket;
@@ -13,8 +12,20 @@ import java.net.Socket;
  */
 public class TCPClient {
 
+    /**
+     *
+     */
     private String hostname = "localhost";
+
+    /**
+     *
+     */
     private int port = 7896;
+
+    /**
+     *
+     */
+    private boolean fileReadyToTransfer = false;
 
     public TCPClient() {
 
@@ -29,6 +40,9 @@ public class TCPClient {
         try (Socket socket = new Socket(hostname, port);
              ObjectOutputStream clientOut = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream clientIn = new ObjectInputStream(socket.getInputStream())) {
+            startServerInteraction(clientIn, clientOut);
+
+            /*
             BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
             String line = "";
             Message message = (ServerMessage) clientIn.readObject();
@@ -44,9 +58,49 @@ public class TCPClient {
             line = stdin.readLine();
             clientMessage = new ClientMessage(line);
             clientOut.writeObject(clientMessage);
+            */
         } catch (IOException | ClassNotFoundException ex) {
             ex.printStackTrace();
         }
+    }
+
+    private void startServerInteraction(ObjectInputStream clientIn, ObjectOutputStream clientOut) throws IOException, ClassNotFoundException {
+        Message receivedMessage = null;
+        do {
+            receivedMessage = (ServerMessage) readMessage(clientIn);
+            System.out.println(receivedMessage.getContent());
+            sendMessage(clientOut, new ClientMessage(readUserInput()));
+        } while (true);
+    }
+
+    private static String readUserInput() {
+        try (BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in))) {
+            return stdin.readLine();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     *
+     * @param serverOut
+     * @param message
+     * @throws IOException
+     */
+    private void sendMessage(ObjectOutputStream serverOut, Message message) throws IOException {
+        serverOut.writeObject(message);
+    }
+
+    /**
+     *
+     * @param serverIn
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    private Message readMessage(ObjectInputStream serverIn) throws IOException, ClassNotFoundException {
+        return (Message) serverIn.readObject();
     }
 
 }

@@ -15,7 +15,7 @@ public abstract class AbstractMessage implements Message {
     /**
      *
      */
-    private StringBuilder content;
+    private final StringBuilder content;
 
     /**
      *
@@ -36,6 +36,18 @@ public abstract class AbstractMessage implements Message {
     @Override
     public void append(String message) {
         content.append(message);
+    }
+
+    /**
+     *
+     * @param message
+     * @param appendLinebreak
+     */
+    public void append(String message, boolean appendLinebreak) {
+        append(message);
+        if (appendLinebreak) {
+            append(NEW_LINE);
+        }
     }
 
     /**

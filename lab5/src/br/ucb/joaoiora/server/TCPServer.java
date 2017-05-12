@@ -6,6 +6,8 @@ import br.ucb.joaoiora.model.ServerMessage;
 import br.ucb.joaoiora.utils.StringUtils;
 
 import java.io.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.DirectoryStream;
@@ -72,6 +74,9 @@ public class TCPServer {
                 }
                 File file = new File(requestedFilename);
                 byte[] fileContent = Files.readAllBytes(getPath(requestedFilename));
+                DatagramSocket datagramSocket = new DatagramSocket();
+                DatagramPacket datagramPacket = new DatagramPacket(fileContent, fileContent.length, socket.getInetAddress(), 30000);
+                datagramSocket.send(datagramPacket);
                 // TODO check file size, prevent files over 512kb because UDP
                 // User has requested a file
                 // Encapsulate needed data on MyFile
@@ -112,6 +117,7 @@ public class TCPServer {
             receivedMessage = (ClientMessage) readMessage(serverIn);
             System.out.println("Client requested the file: " + receivedMessage.getContent());
             validFile = isRegularFile(getPath(receivedMessage.getContent()));
+            System.out.println("valid file? - " + (validFile ? "true" : "false"));
         } while (!validFile);
         prepFileTransfer(serverOut, receivedMessage);
     }
@@ -159,11 +165,13 @@ public class TCPServer {
      * @return
      */
     private Message createResponse(final Message receivedMessage) {
+        System.out.println("receivedMessage.getContent(): " + receivedMessage.getContent());
         final Path rootPath = getPath(receivedMessage.getContent());
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(rootPath)) {
             Message message = new ServerMessage();
             for (Path path : stream) {
                 if (!Files.isDirectory(path)) {
+                    System.out.println("message.append(path): " + path.toString());
                     message.append(path.toString(), true);
                 }
                 message.append("Please enter the name of the desired file: ", false);

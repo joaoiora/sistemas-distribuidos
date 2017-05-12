@@ -5,6 +5,8 @@ import br.ucb.joaoiora.model.Message;
 import br.ucb.joaoiora.model.ServerMessage;
 
 import java.io.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.Socket;
 
 /**
@@ -41,7 +43,14 @@ public class TCPClient {
              ObjectOutputStream clientOut = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream clientIn = new ObjectInputStream(socket.getInputStream())) {
             startServerInteraction(clientIn, clientOut);
-
+            DatagramSocket datagramSocket = new DatagramSocket(30000);
+            DatagramPacket datagramPacket = new DatagramPacket(new byte[64 * 1024], 64 * 1024);
+            datagramSocket.receive(datagramPacket);
+            byte[] content = datagramPacket.getData();
+            System.out.println("log java.io.tmpdir: " + System.getProperty("java.io.tmpdir"));
+            FileOutputStream outputStream = new FileOutputStream(System.getProperty("java.io.tmpdir"));
+            outputStream.write(content);
+            outputStream.close();
             /*
             BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
             String line = "";
@@ -65,12 +74,24 @@ public class TCPClient {
     }
 
     private void startServerInteraction(ObjectInputStream clientIn, ObjectOutputStream clientOut) throws IOException, ClassNotFoundException {
+        BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
+        String line = "";
         Message receivedMessage = null;
+        Boolean validFile = Boolean.FALSE;
         do {
             receivedMessage = (ServerMessage) readMessage(clientIn);
             System.out.println(receivedMessage.getContent());
-            sendMessage(clientOut, new ClientMessage(readUserInput()));
-        } while (true);
+            line = stdin.readLine();
+            sendMessage(clientOut, new ClientMessage(line));
+
+            receivedMessage = (ServerMessage) readMessage(clientIn);
+            System.out.println(receivedMessage.getContent());
+            line = stdin.readLine();
+            sendMessage(clientOut, new ClientMessage(line));
+
+            validFile = clientIn.readBoolean();
+        } while (!validFile);
+        Boolean readyToTransfer = clientIn.readBoolean();
     }
 
     private static String readUserInput() {

@@ -11,12 +11,13 @@ public interface Message extends Serializable {
      *
      * @param message
      */
-    public abstract void append(final String message);
+    void append(final String message);
+
+    void append(final String message, boolean appendLinebreak);
 
     /**
      *
      * @return
      */
-    public abstract String getContent();
-
+    String getContent();
 }

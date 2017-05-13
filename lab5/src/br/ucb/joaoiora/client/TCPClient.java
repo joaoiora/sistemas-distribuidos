@@ -77,21 +77,16 @@ public class TCPClient {
         BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
         String line = "";
         Message receivedMessage = null;
-        Boolean validFile = Boolean.FALSE;
-        do {
-            receivedMessage = (ServerMessage) readMessage(clientIn);
-            System.out.println(receivedMessage.getContent());
-            line = stdin.readLine();
-            sendMessage(clientOut, new ClientMessage(line));
+        receivedMessage = (ServerMessage) readMessage(clientIn);
+        System.out.println(receivedMessage.getContent());
+        line = stdin.readLine();
+        sendMessage(clientOut, new ClientMessage(line));
 
-            receivedMessage = (ServerMessage) readMessage(clientIn);
-            System.out.println(receivedMessage.getContent());
-            line = stdin.readLine();
-            sendMessage(clientOut, new ClientMessage(line));
-
-            validFile = clientIn.readBoolean();
-        } while (!validFile);
-        Boolean readyToTransfer = clientIn.readBoolean();
+        receivedMessage = (ServerMessage) readMessage(clientIn);
+        System.out.println(receivedMessage.getContent());
+        line = stdin.readLine();
+        sendMessage(clientOut, new ClientMessage(line));
+        stdin.close();
     }
 
     private static String readUserInput() {
@@ -104,7 +99,6 @@ public class TCPClient {
     }
 
     /**
-     *
      * @param serverOut
      * @param message
      * @throws IOException
@@ -114,7 +108,6 @@ public class TCPClient {
     }
 
     /**
-     *
      * @param serverIn
      * @return
      * @throws IOException

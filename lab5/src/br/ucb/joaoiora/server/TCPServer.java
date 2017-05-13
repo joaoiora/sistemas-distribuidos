@@ -3,22 +3,28 @@ package br.ucb.joaoiora.server;
 import br.ucb.joaoiora.model.ClientMessage;
 import br.ucb.joaoiora.model.Message;
 import br.ucb.joaoiora.model.ServerMessage;
+import br.ucb.joaoiora.utils.CollectionUtils;
 import br.ucb.joaoiora.utils.StringUtils;
 
-import java.io.*;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by joaocarlos on 08/05/17.
  */
 public class TCPServer {
+
+    private static final boolean IS_WINDOWS = System.getProperty("os.name").contains("indows");
 
     /**
      *
@@ -43,11 +49,6 @@ public class TCPServer {
     /**
      *
      */
-    private boolean readyToTransfer = false;
-
-    /**
-     *
-     */
     public TCPServer() {
 
     }
@@ -68,15 +69,12 @@ public class TCPServer {
             try (Socket socket = serverSocket.accept();
                  ObjectOutputStream serverOut = new ObjectOutputStream(socket.getOutputStream());
                  ObjectInputStream serverIn = new ObjectInputStream(socket.getInputStream())) {
+                System.out.println("A new client from " + socket.getInetAddress().getHostAddress() + " joined the Server.");
                 startClientInteraction(serverIn, serverOut);
-                if (this.readyToTransfer) {
-                    // start the thread to send requested file...
-                }
+
                 File file = new File(requestedFilename);
                 byte[] fileContent = Files.readAllBytes(getPath(requestedFilename));
-                DatagramSocket datagramSocket = new DatagramSocket();
-                DatagramPacket datagramPacket = new DatagramPacket(fileContent, fileContent.length, socket.getInetAddress(), 30000);
-                datagramSocket.send(datagramPacket);
+
                 // TODO check file size, prevent files over 512kb because UDP
                 // User has requested a file
                 // Encapsulate needed data on MyFile
@@ -96,7 +94,6 @@ public class TCPServer {
     }
 
     /**
-     *
      * @param serverIn
      * @param serverOut
      * @throws IOException
@@ -104,38 +101,22 @@ public class TCPServer {
      */
     private void startClientInteraction(ObjectInputStream serverIn, ObjectOutputStream serverOut) throws IOException, ClassNotFoundException {
         Message receivedMessage = null;
-        boolean validFile = false;
-        do {
-            sendMessage(serverOut, new ServerMessage("Please enter a directory: "));
-            receivedMessage = (ClientMessage) readMessage(serverIn);
-            System.out.println("Client requested directory: " + receivedMessage.getContent());
-            if (isRegularFile(getPath(receivedMessage.getContent()))) {
-                prepFileTransfer(serverOut, receivedMessage);
-                return; // There should be a better way to exit this (not for now)...
-            }
-            sendMessage(serverOut, createResponse(receivedMessage));
-            receivedMessage = (ClientMessage) readMessage(serverIn);
-            System.out.println("Client requested the file: " + receivedMessage.getContent());
-            validFile = isRegularFile(getPath(receivedMessage.getContent()));
-            System.out.println("valid file? - " + (validFile ? "true" : "false"));
-        } while (!validFile);
-        prepFileTransfer(serverOut, receivedMessage);
-    }
-
-    /**
-     *
-     * @param serverOut
-     * @param receivedMessage
-     * @throws IOException
-     */
-    private void prepFileTransfer(ObjectOutputStream serverOut, Message receivedMessage) throws IOException {
+        sendMessage(serverOut, new ServerMessage("Please enter a directory: "));
+        receivedMessage = (ClientMessage) readMessage(serverIn);
+        System.out.println("Client requested directory: " + receivedMessage.getContent());
+        /* TODO do user input validation
+        if (isRegularFile(getPath(receivedMessage.getContent()))) {
+            prepFileTransfer(serverOut, receivedMessage);
+            return; // There should be a better way to exit this (not for now)...
+        }
+        */
+        sendMessage(serverOut, createResponse(receivedMessage));
+        receivedMessage = (ClientMessage) readMessage(serverIn);
+        System.out.println("Client requested the file: " + receivedMessage.getContent());
         this.requestedFilename = receivedMessage.getContent();
-        this.readyToTransfer = true;
-        sendMessage(serverOut, Boolean.valueOf(readyToTransfer));
     }
 
     /**
-     *
      * @param serverOut
      * @param message
      * @throws IOException
@@ -144,12 +125,7 @@ public class TCPServer {
         serverOut.writeObject(message);
     }
 
-    private void sendMessage(ObjectOutputStream serverOut, Boolean value) throws IOException {
-        serverOut.writeBoolean(value);
-    }
-
     /**
-     *
      * @param serverIn
      * @return
      * @throws IOException
@@ -160,31 +136,53 @@ public class TCPServer {
     }
 
     /**
-     *
      * @param receivedMessage
      * @return
      */
     private Message createResponse(final Message receivedMessage) {
-        System.out.println("receivedMessage.getContent(): " + receivedMessage.getContent());
-        final Path rootPath = getPath(receivedMessage.getContent());
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(rootPath)) {
-            Message message = new ServerMessage();
-            for (Path path : stream) {
-                if (!Files.isDirectory(path)) {
-                    System.out.println("message.append(path): " + path.toString());
-                    message.append(path.toString(), true);
-                }
-                message.append("Please enter the name of the desired file: ", false);
-                return message;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        final Path path = getPath(receivedMessage.getContent());
+        final List<String> paths = getListOfFiles(path);
+        if (CollectionUtils.isEmpty(paths)) {
+            return new ServerMessage("There was a problem when trying to parse your input");
         }
-        return new ServerMessage("There was a problem trying to parse your request.");
+        Message message = new ServerMessage();
+        for (String str : paths) {
+            message.append(str, true);
+        }
+        message.append("Please enter the complete path of the desired file: ", false);
+        return message;
     }
 
     /**
      *
+     * @param path
+     * @return
+     */
+    private static List<String> getListOfFiles(final Path path) {
+        return getListOfFiles(path, 512);
+    }
+
+    /**
+     *
+     * @param path
+     * @param maxSize
+     * @return
+     */
+    private static List<String> getListOfFiles(final Path path, int maxSize) {
+        List<String> files = new ArrayList<>();
+        try (DirectoryStream<Path> paths = Files.newDirectoryStream(path)) {
+            for (Path p : paths) {
+                if (!Files.isDirectory(p)) {
+                    files.add(p.toString());
+                }
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return files;
+    }
+
+    /**
      * @param path
      * @return
      */
@@ -196,19 +194,20 @@ public class TCPServer {
     }
 
     /**
-     *
      * @param path
      * @return
      */
-    private static Path getPath(final String path) {
+    private static Path getPath(String path) {
         if (StringUtils.isEmpty(path)) {
             return null;
+        }
+        if (IS_WINDOWS) {
+            path = path.replace("\\", "\\\\");
         }
         return Paths.get(path);
     }
 
     /**
-     *
      * @return
      */
     private boolean isRunning() {

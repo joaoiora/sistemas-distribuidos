@@ -26,7 +26,7 @@ public abstract class AbstractMessage implements Message {
 
     public AbstractMessage(String initialContent) {
         this();
-        append(initialContent);
+        append(initialContent, false);
     }
 
     /**
@@ -36,9 +36,11 @@ public abstract class AbstractMessage implements Message {
     @Override
     public void append(String message) {
         content.append(message);
+        /*
         if (!message.endsWith(NEW_LINE)) {
             content.append(NEW_LINE);
         }
+        */
     }
 
     /**

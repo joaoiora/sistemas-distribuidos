@@ -13,6 +13,11 @@ public interface Message extends Serializable {
      */
     void append(final String message);
 
+    /**
+     *
+     * @param message
+     * @param appendLinebreak
+     */
     void append(final String message, boolean appendLinebreak);
 
     /**

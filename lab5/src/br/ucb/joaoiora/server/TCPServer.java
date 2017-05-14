@@ -1,17 +1,17 @@
 package br.ucb.joaoiora.server;
 
 import br.ucb.joaoiora.model.ClientMessage;
+import br.ucb.joaoiora.model.FileObject;
 import br.ucb.joaoiora.model.Message;
 import br.ucb.joaoiora.model.ServerMessage;
 import br.ucb.joaoiora.utils.CollectionUtils;
 import br.ucb.joaoiora.utils.StringUtils;
 
-import java.io.File;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -72,9 +72,23 @@ public class TCPServer {
                 System.out.println("A new client from " + socket.getInetAddress().getHostAddress() + " joined the Server.");
                 startClientInteraction(serverIn, serverOut);
 
-                File file = new File(requestedFilename);
-                byte[] fileContent = Files.readAllBytes(getPath(requestedFilename));
-
+                byte[] incomingData = new byte[1024];
+                FileObject fileObject = createNewFileObject();
+                try (DatagramSocket datagramSocket = new DatagramSocket();
+                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                     ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+                    oos.writeObject(fileObject);
+                    byte[] data = baos.toByteArray();
+                    DatagramPacket packet = new DatagramPacket(data, data.length, InetAddress.getByName("localhost"), 30000);
+                    datagramSocket.send(packet);
+                    System.out.println("File sent to the client...");
+                    DatagramPacket clientPacket = new DatagramPacket(incomingData, incomingData.length);
+                    datagramSocket.receive(clientPacket);
+                    System.out.println("Received from client: " + new String(clientPacket.getData()));
+                    Thread.sleep(3000);
+                } catch (IOException | InterruptedException ex) {
+                    ex.printStackTrace();
+                }
                 // TODO check file size, prevent files over 512kb because UDP
                 // User has requested a file
                 // Encapsulate needed data on MyFile
@@ -89,8 +103,21 @@ public class TCPServer {
                 ex.printStackTrace();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
+    }
+
+    private FileObject createNewFileObject() throws IOException {
+        FileObject file = new FileObject();
+        file.setSrcFolder(this.requestedFilename);
+        file.setFilename(Paths.get(requestedFilename).getFileName().toString()); // TODO check if it works
+        System.out.println("file filename: " + file.getFilename());
+        byte[] fileContent = Files.readAllBytes(getPath(requestedFilename));
+        file.setContent(fileContent);
+        file.setDestFolder("tmp/"); // TODO should use OS temp folder (it requires access privileges though)
+        return file;
     }
 
     /**
@@ -99,7 +126,7 @@ public class TCPServer {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    private void startClientInteraction(ObjectInputStream serverIn, ObjectOutputStream serverOut) throws IOException, ClassNotFoundException {
+    private void startClientInteraction(ObjectInputStream serverIn, ObjectOutputStream serverOut) throws IOException, ClassNotFoundException, InterruptedException {
         Message receivedMessage = null;
         sendMessage(serverOut, new ServerMessage("Please enter a directory: "));
         receivedMessage = (ClientMessage) readMessage(serverIn);
@@ -114,6 +141,7 @@ public class TCPServer {
         receivedMessage = (ClientMessage) readMessage(serverIn);
         System.out.println("Client requested the file: " + receivedMessage.getContent());
         this.requestedFilename = receivedMessage.getContent();
+        Thread.sleep(1000);
     }
 
     /**

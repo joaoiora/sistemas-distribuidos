@@ -1,12 +1,14 @@
 package br.ucb.joaoiora.client;
 
 import br.ucb.joaoiora.model.ClientMessage;
+import br.ucb.joaoiora.model.FileObject;
 import br.ucb.joaoiora.model.Message;
 import br.ucb.joaoiora.model.ServerMessage;
 
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.Socket;
 
 /**
@@ -27,52 +29,62 @@ public class TCPClient {
     /**
      *
      */
-    private boolean fileReadyToTransfer = false;
-
     public TCPClient() {
 
     }
 
+    /**
+     * @param hostname
+     * @param port
+     */
     public TCPClient(String hostname, int port) {
         this.hostname = hostname;
         this.port = port;
     }
 
+    /**
+     *
+     */
     public void connect() {
         try (Socket socket = new Socket(hostname, port);
              ObjectOutputStream clientOut = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream clientIn = new ObjectInputStream(socket.getInputStream())) {
             startServerInteraction(clientIn, clientOut);
-            DatagramSocket datagramSocket = new DatagramSocket(30000);
-            DatagramPacket datagramPacket = new DatagramPacket(new byte[64 * 1024], 64 * 1024);
-            datagramSocket.receive(datagramPacket);
-            byte[] content = datagramPacket.getData();
-            System.out.println("log java.io.tmpdir: " + System.getProperty("java.io.tmpdir"));
-            FileOutputStream outputStream = new FileOutputStream(System.getProperty("java.io.tmpdir"));
-            outputStream.write(content);
-            outputStream.close();
-            /*
-            BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
-            String line = "";
-            Message message = (ServerMessage) clientIn.readObject();
-            System.out.println(message.getContent());
-
-            line = stdin.readLine();
-            Message clientMessage = new ClientMessage(line);
-            clientOut.writeObject(clientMessage);
-
-            message = (ServerMessage) clientIn.readObject();
-            System.out.println(message.getContent());
-
-            line = stdin.readLine();
-            clientMessage = new ClientMessage(line);
-            clientOut.writeObject(clientMessage);
-            */
+            try (DatagramSocket datagramSocket = new DatagramSocket(30000)) {
+                byte[] incomingData = new byte[1024 * 1000 * 50];
+                while (true) {
+                    DatagramPacket incomingPacket = new DatagramPacket(incomingData, incomingData.length);
+                    datagramSocket.receive(incomingPacket);
+                    byte[] data = incomingPacket.getData();
+                    ByteArrayInputStream bais = new ByteArrayInputStream(data);
+                    ObjectInputStream ois = new ObjectInputStream(bais);
+                    FileObject fileObject = (FileObject) ois.readObject();
+                    if (fileObject == null) {
+                        System.out.println("There was an error when trying to obtain the file.");
+                        System.exit(-1);
+                    }
+                    createAndWriteFile(fileObject);
+                    InetAddress address = incomingPacket.getAddress();
+                    int port = incomingPacket.getPort();
+                    byte[] reply = "Thanks for the file.".getBytes();
+                    datagramSocket.send(new DatagramPacket(reply, reply.length, address, port));
+                    Thread.sleep(4000);
+                    System.exit(0);
+                }
+            } catch (IOException | InterruptedException ex) {
+                ex.printStackTrace();
+            }
         } catch (IOException | ClassNotFoundException ex) {
             ex.printStackTrace();
         }
     }
 
+    /**
+     * @param clientIn
+     * @param clientOut
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private void startServerInteraction(ObjectInputStream clientIn, ObjectOutputStream clientOut) throws IOException, ClassNotFoundException {
         BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
         String line = "";
@@ -89,13 +101,24 @@ public class TCPClient {
         stdin.close();
     }
 
-    private static String readUserInput() {
-        try (BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in))) {
-            return stdin.readLine();
+    /**
+     * @param fileObject
+     */
+    private void createAndWriteFile(FileObject fileObject) {
+        String output = fileObject.getDestFolder() + fileObject.getFilename();
+        try {
+            File file = new File(output);
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            try (FileOutputStream fos = new FileOutputStream(file)) {
+                fos.write(fileObject.getContent());
+                fos.flush();
+            }
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-        return null;
+        System.out.println("Output file " + fileObject.getFilename() + " is saved to temp folder of the project.");
     }
 
     /**

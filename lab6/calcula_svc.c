@@ -48,13 +48,13 @@ prog_110(struct svc_req *rqstp, register SVCXPRT *transp)
 
 	case MULT:
 		_xdr_argument = (xdrproc_t) xdr_operandos;
-		_xdr_result = (xdrproc_t) xdr_int;
+		_xdr_result = (xdrproc_t) xdr_float;
 		local = (char *(*)(char *, struct svc_req *)) mult_110_svc;
 		break;
 
 	case DIV:
 		_xdr_argument = (xdrproc_t) xdr_operandos;
-		_xdr_result = (xdrproc_t) xdr_int;
+		_xdr_result = (xdrproc_t) xdr_float;
 		local = (char *(*)(char *, struct svc_req *)) div_110_svc;
 		break;
 

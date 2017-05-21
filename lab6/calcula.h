@@ -31,11 +31,11 @@ extern  int * add_110_svc(operandos *, struct svc_req *);
 extern  int * sub_110(operandos *, CLIENT *);
 extern  int * sub_110_svc(operandos *, struct svc_req *);
 #define MULT 3
-extern  int * mult_110(operandos *, CLIENT *);
-extern  int * mult_110_svc(operandos *, struct svc_req *);
+extern  float * mult_110(operandos *, CLIENT *);
+extern  float * mult_110_svc(operandos *, struct svc_req *);
 #define DIV 4
-extern  int * div_110(operandos *, CLIENT *);
-extern  int * div_110_svc(operandos *, struct svc_req *);
+extern  float * div_110(operandos *, CLIENT *);
+extern  float * div_110_svc(operandos *, struct svc_req *);
 extern int prog_110_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
@@ -46,11 +46,11 @@ extern  int * add_110_svc();
 extern  int * sub_110();
 extern  int * sub_110_svc();
 #define MULT 3
-extern  int * mult_110();
-extern  int * mult_110_svc();
+extern  float * mult_110();
+extern  float * mult_110_svc();
 #define DIV 4
-extern  int * div_110();
-extern  int * div_110_svc();
+extern  float * div_110();
+extern  float * div_110_svc();
 extern int prog_110_freeresult ();
 #endif /* K&R C */
 

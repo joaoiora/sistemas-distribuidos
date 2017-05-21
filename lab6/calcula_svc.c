@@ -17,11 +17,13 @@
 #endif
 
 static void
-prog_100(struct svc_req *rqstp, register SVCXPRT *transp)
+prog_110(struct svc_req *rqstp, register SVCXPRT *transp)
 {
 	union {
-		operandos add_100_arg;
-		operandos sub_100_arg;
+		operandos add_110_arg;
+		operandos sub_110_arg;
+		operandos mult_110_arg;
+		operandos div_110_arg;
 	} argument;
 	char *result;
 	xdrproc_t _xdr_argument, _xdr_result;
@@ -35,13 +37,25 @@ prog_100(struct svc_req *rqstp, register SVCXPRT *transp)
 	case ADD:
 		_xdr_argument = (xdrproc_t) xdr_operandos;
 		_xdr_result = (xdrproc_t) xdr_int;
-		local = (char *(*)(char *, struct svc_req *)) add_100_svc;
+		local = (char *(*)(char *, struct svc_req *)) add_110_svc;
 		break;
 
 	case SUB:
 		_xdr_argument = (xdrproc_t) xdr_operandos;
 		_xdr_result = (xdrproc_t) xdr_int;
-		local = (char *(*)(char *, struct svc_req *)) sub_100_svc;
+		local = (char *(*)(char *, struct svc_req *)) sub_110_svc;
+		break;
+
+	case MULT:
+		_xdr_argument = (xdrproc_t) xdr_operandos;
+		_xdr_result = (xdrproc_t) xdr_int;
+		local = (char *(*)(char *, struct svc_req *)) mult_110_svc;
+		break;
+
+	case DIV:
+		_xdr_argument = (xdrproc_t) xdr_operandos;
+		_xdr_result = (xdrproc_t) xdr_int;
+		local = (char *(*)(char *, struct svc_req *)) div_110_svc;
 		break;
 
 	default:
@@ -76,7 +90,7 @@ main (int argc, char **argv)
 		fprintf (stderr, "%s", "cannot create udp service.");
 		exit(1);
 	}
-	if (!svc_register(transp, PROG, VERSAO, prog_100, IPPROTO_UDP)) {
+	if (!svc_register(transp, PROG, VERSAO, prog_110, IPPROTO_UDP)) {
 		fprintf (stderr, "%s", "unable to register (PROG, VERSAO, udp).");
 		exit(1);
 	}
@@ -86,7 +100,7 @@ main (int argc, char **argv)
 		fprintf (stderr, "%s", "cannot create tcp service.");
 		exit(1);
 	}
-	if (!svc_register(transp, PROG, VERSAO, prog_100, IPPROTO_TCP)) {
+	if (!svc_register(transp, PROG, VERSAO, prog_110, IPPROTO_TCP)) {
 		fprintf (stderr, "%s", "unable to register (PROG, VERSAO, tcp).");
 		exit(1);
 	}

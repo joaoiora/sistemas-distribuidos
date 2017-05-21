@@ -21,25 +21,37 @@ struct operandos {
 typedef struct operandos operandos;
 
 #define PROG 55555555
-#define VERSAO 100
+#define VERSAO 110
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define ADD 1
-extern  int * add_100(operandos *, CLIENT *);
-extern  int * add_100_svc(operandos *, struct svc_req *);
+extern  int * add_110(operandos *, CLIENT *);
+extern  int * add_110_svc(operandos *, struct svc_req *);
 #define SUB 2
-extern  int * sub_100(operandos *, CLIENT *);
-extern  int * sub_100_svc(operandos *, struct svc_req *);
-extern int prog_100_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
+extern  int * sub_110(operandos *, CLIENT *);
+extern  int * sub_110_svc(operandos *, struct svc_req *);
+#define MULT 3
+extern  int * mult_110(operandos *, CLIENT *);
+extern  int * mult_110_svc(operandos *, struct svc_req *);
+#define DIV 4
+extern  int * div_110(operandos *, CLIENT *);
+extern  int * div_110_svc(operandos *, struct svc_req *);
+extern int prog_110_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
 #define ADD 1
-extern  int * add_100();
-extern  int * add_100_svc();
+extern  int * add_110();
+extern  int * add_110_svc();
 #define SUB 2
-extern  int * sub_100();
-extern  int * sub_100_svc();
-extern int prog_100_freeresult ();
+extern  int * sub_110();
+extern  int * sub_110_svc();
+#define MULT 3
+extern  int * mult_110();
+extern  int * mult_110_svc();
+#define DIV 4
+extern  int * div_110();
+extern  int * div_110_svc();
+extern int prog_110_freeresult ();
 #endif /* K&R C */
 
 /* the xdr functions */

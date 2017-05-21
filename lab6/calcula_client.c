@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include "calcula.h"
 
-void prog_110(char* host, operando ops);
-int adicao(CLIENT* clnt, operando ops);
-int subtracao(CLIENT* clnt, operando ops);
-float multiplicacao(CLIENT* clnt, operando ops);
-float divisao(CLIENT* clnt, operando ops);
+void prog_110(char* host, operandos ops);
+int adicao(CLIENT* clnt, operandos ops);
+int subtracao(CLIENT* clnt, operandos ops);
+float multiplicacao(CLIENT* clnt, operandos ops);
+float divisao(CLIENT* clnt, operandos ops);
 
 int main (int argc, char *argv[]) {
 	char *host = NULL;
@@ -14,14 +14,14 @@ int main (int argc, char *argv[]) {
 		exit(1);
 	}
 	host = argv[1];
-	operando ops;
+	operandos ops;
 	ops.x = atoi(argv[2]);
 	ops.y = atoi(argv[3]);
 	prog_110(host, ops);
 	exit(0);
 }
 
-void prog_110(char* host, operando ops) {
+void prog_110(char* host, operandos ops) {
 	CLIENT* clnt;
 #ifndef	DEBUG
 	clnt = clnt_create (host, PROG, VERSAO, "udp");
@@ -43,7 +43,7 @@ void prog_110(char* host, operando ops) {
 
 }
 
-int adicao(CLIENT *clnt, operando ops) {
+int adicao(CLIENT *clnt, operandos ops) {
     int *result = add_110(&ops, clnt);
     if (result == (int *) NULL) {
         fprintf(stderr, "Erro na chamada RPC da função add().");
@@ -52,8 +52,8 @@ int adicao(CLIENT *clnt, operando ops) {
     return *result;
 }
 
-int subtracao(CLIENT *clnt, operando ops) {
-    int *result = add_110(&ops, clnt);
+int subtracao(CLIENT *clnt, operandos ops) {
+    int *result = sub_110(&ops, clnt);
     if (result == (int *)NULL) {
         fprintf(stderr, "Erro na chamada RPC da função add().");
         exit(0);
@@ -61,8 +61,8 @@ int subtracao(CLIENT *clnt, operando ops) {
     return *result;
 }
 
-float multiplicacao(CLIENT *clnt, operando ops) {
-	float *result = add_110(&ops, clnt);
+float multiplicacao(CLIENT *clnt, operandos ops) {
+	float *result = mult_110(&ops, clnt);
     if (result == (float *)NULL) {
         fprintf(stderr, "Erro na chamada RPC da função add().");
         exit(0);
@@ -70,8 +70,8 @@ float multiplicacao(CLIENT *clnt, operando ops) {
     return *result;
 }
 
-float divisao(CLIENT *clnt, operando ops) {
-	float *result = add_110(&ops, clnt);
+float divisao(CLIENT *clnt, operandos ops) {
+	float *result = div_110(&ops, clnt);
     if (result == (float *)NULL) {
         fprintf(stderr, "Erro na chamada RPC da função add().");
         exit(0);

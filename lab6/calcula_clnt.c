@@ -9,9 +9,7 @@
 /* Default timeout can be changed using clnt_control() */
 static struct timeval TIMEOUT = { 25, 0 };
 
-int *
-add_110(operandos *argp, CLIENT *clnt)
-{
+int* add_110(operandos *argp, CLIENT *clnt) {
 	static int clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -24,9 +22,7 @@ add_110(operandos *argp, CLIENT *clnt)
 	return (&clnt_res);
 }
 
-int *
-sub_110(operandos *argp, CLIENT *clnt)
-{
+int* sub_110(operandos *argp, CLIENT *clnt) {
 	static int clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -39,9 +35,7 @@ sub_110(operandos *argp, CLIENT *clnt)
 	return (&clnt_res);
 }
 
-float *
-mult_110(operandos *argp, CLIENT *clnt)
-{
+float* mult_110(operandos *argp, CLIENT *clnt) {
 	static float clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -54,9 +48,7 @@ mult_110(operandos *argp, CLIENT *clnt)
 	return (&clnt_res);
 }
 
-float *
-div_110(operandos *argp, CLIENT *clnt)
-{
+float* div_110(operandos *argp, CLIENT *clnt) {
 	static float clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));

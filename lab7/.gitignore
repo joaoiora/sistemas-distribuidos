@@ -1,0 +1,6 @@
+### Java ###
+
+# Compiled Class files #
+*.class
+potencia/**/*.class
+calculadora/**/*.class

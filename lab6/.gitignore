@@ -1,6 +1,10 @@
 ### C ###
 *.d
 
+# Executable files
+calcula_server
+calcula_client
+
 # Object files
 *.o
 *.ko

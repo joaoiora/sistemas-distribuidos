@@ -35,8 +35,7 @@ void prog_110(char* host, operandos ops) {
 	printf("%d - %d = %d\n", ops.x, ops.y, subtracao(clnt, ops));
 	printf("%d * %d = %.2f\n", ops.x, ops.y, multiplicacao(clnt, ops));
 	printf("%d / %d = %.2f\n", ops.x, ops.y, divisao(clnt, ops));
-	
-	
+
 #ifndef	DEBUG
 	clnt_destroy (clnt);
 #endif	 /* DEBUG */
